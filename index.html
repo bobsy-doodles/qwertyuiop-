@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gift Card Manager</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 1000px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .login-page, .main-app {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* LOGIN PAGE */
+        .login-page {
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .login-page.hidden {
+            display: none;
+        }
+
+        .login-page h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .login-page p {
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            text-align: left;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .auth-buttons button {
+            flex: 1;
+        }
+
+        .auth-toggle {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .auth-toggle button {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff5252;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* MAIN APP */
+        .main-app.hidden {
+            display: none;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .app-header h1 {
+            font-size: 28px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-info span {
+            opacity: 0.9;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid white;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .app-content {
+            padding: 40px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #999;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tab.active {
+            color: #667eea;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ADD CARD FORM */
+        .form-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .form-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-grid.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* CARD LIST */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .card-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .card-number {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            word-break: break-all;
+        }
+
+        .card-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .card-status.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .card-status.expired {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .card-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .card-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-info-label {
+            font-size: 12px;
+            color: #999;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .card-info-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .card-balance {
+            font-size: 24px;
+            color: #667eea;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .card-actions button {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+
+        /* RECEIPT UPLOAD */
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .upload-area:hover {
+            background: #f0f0ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background: #e8eaf6;
+            border-color: #764ba2;
+            transform: scale(1.02);
+        }
+
+        .upload-area p {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .upload-area small {
+            color: #999;
+        }
+
+        #receiptInput {
+            display: none;
+        }
+
+        .receipt-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .receipt-item {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .receipt-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .receipt-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+
+        .receipt-info {
+            padding: 15px;
+        }
+
+        .receipt-amount {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .receipt-date {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .receipt-card {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+
+        .receipt-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .receipt-actions button {
+            flex: 1;
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        /* RECEIPT EDIT MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .modal-form-group {
+            margin-bottom: 20px;
+        }
+
+        .modal-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .modal-form-group input, .modal-form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .modal-form-group input:focus, .modal-form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+        }
+
+        .ocr-status {
+            background: #e7f3ff;
+            color: #0c5aa0;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .ocr-loading {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .detected-values {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .detected-values p {
+            margin-bottom: 8px;
+        }
+
+        .detected-values strong {
+            color: #667eea;
+        }
+
+        .detection-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .detection-item.matched {
+            border-left-color: #28a745;
+            background: #f0f7f4;
+        }
+
+        .detection-item.matched strong {
+            color: #28a745;
+        }
+
+        .detection-item.clickable {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .detection-item.clickable:hover {
+            background: #f5f5f5;
+            transform: translateX(3px);
+        }
+
+        /* NO DATA MESSAGES */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state h3 {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .app-header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .user-info {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .logout-btn {
+                width: 100%;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .form-actions button {
+                width: 100%;
+            }
+
+            .auth-buttons {
+                flex-direction: column;
+            }
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN PAGE -->
+    <div class="container">
+        <div class="login-page" id="loginPage">
+            <h1>💳 Gift Card Manager</h1>
+            <p>Track your gift cards and receipt expenses</p>
+            
+            <div class="error-message" id="errorMessage"></div>
+
+            <form id="authForm" onsubmit="handleAuth(event)">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required placeholder="Enter your password">
+                </div>
+                <div class="form-group" id="confirmPasswordGroup" style="display: none;">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" placeholder="Confirm your password">
+                </div>
+                <div class="auth-buttons">
+                    <button type="submit" class="btn btn-primary" id="authButton">Sign In</button>
+                </div>
+            </form>
+
+            <div class="auth-toggle">
+                Don't have an account? 
+                <button type="button" onclick="toggleAuthMode()">Create one</button>
+            </div>
+        </div>
+
+        <!-- MAIN APP -->
+        <div class="main-app hidden" id="mainApp">
+            <div class="app-header">
+                <h1>💳 Gift Card Manager</h1>
+                <div class="user-info">
+                    <span>Welcome, <strong id="userDisplay">User</strong></span>
+                    <button class="logout-btn" onclick="handleLogout()">Logout</button>
+                </div>
+            </div>
+
+            <div class="app-content">
+                <!-- STATS -->
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Balance</div>
+                        <div class="stat-value" id="totalBalance">$0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Active Cards</div>
+                        <div class="stat-value" id="activeCards">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Spent</div>
+                        <div class="stat-value" id="totalSpent">$0.00</div>
+                    </div>
+                </div>
+
+                <!-- TABS -->
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab(event, 'cards')">My Cards</button>
+                    <button class="tab" onclick="switchTab(event, 'receipts')">Receipts</button>
+                </div>
+
+                <!-- TAB: CARDS -->
+                <div class="tab-content active" id="cardsTab">
+                    <div class="form-section">
+                        <h2>Add New Gift Card</h2>
+                        <form onsubmit="handleAddCard(event)">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="cardNumber">Card Number</label>
+                                    <input type="text" id="cardNumber" placeholder="Enter card number" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cardAmount">Balance ($)</label>
+                                    <input type="number" id="cardAmount" step="0.01" placeholder="0.00" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="expiryDate">Expiry Date</label>
+                                    <input type="date" id="expiryDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cardName">Card Name/Store</label>
+                                    <input type="text" id="cardName" placeholder="e.g., Amazon, Best Buy" required>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Add Card</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="cardsContainer"></div>
+                </div>
+
+                <!-- TAB: RECEIPTS -->
+                <div class="tab-content" id="receiptsTab">
+                    <div class="form-section">
+                        <h2>Upload Receipt</h2>
+                        <div class="upload-area" id="uploadArea">
+                            <p>📸 Click to Upload Receipt</p>
+                            <small>Supported: JPG, PNG, WebP (max 5MB)</small>
+                        </div>
+                        <input type="file" id="receiptInput" accept="image/*" onchange="handleReceiptUpload(event)">
+                    </div>
+
+                    <div id="receiptsContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT RECEIPT MODAL -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h2>Edit Receipt Details</h2>
+            <div class="ocr-status" id="ocrStatus" style="display: none;">
+                <span class="ocr-loading">⏳</span> Analyzing receipt...
+            </div>
+            <div class="detected-values" id="detectedValues" style="display: none;"></div>
+            <form onsubmit="handleSaveReceipt(event)">
+                <div class="modal-form-group">
+                    <label for="editAmount">Amount Spent ($)</label>
+                    <input type="number" id="editAmount" step="0.01" required>
+                </div>
+                <div class="modal-form-group">
+                    <label for="editCard">Card Used</label>
+                    <select id="editCard" required></select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="editCardNumber">Card Number (from receipt)</label>
+                    <input type="text" id="editCardNumber" placeholder="Card number detected from receipt" readonly>
+                </div>
+                <div class="modal-form-group">
+                    <label for="editNotes">Notes</label>
+                    <input type="text" id="editNotes" placeholder="Optional notes">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ========================
+        // AUTH MODE
+        // ========================
+        let isSignUpMode = false;
+        let users = JSON.parse(localStorage.getItem('users') || '{}');
+
+        function toggleAuthMode() {
+            isSignUpMode = !isSignUpMode;
+            const confirmGroup = document.getElementById('confirmPasswordGroup');
+            const authButton = document.getElementById('authButton');
+            const loginText = document.querySelector('.auth-toggle');
+
+            if (isSignUpMode) {
+                confirmGroup.style.display = 'block';
+                authButton.textContent = 'Create Account';
+                loginText.innerHTML = 'Already have an account? <button type="button" onclick="toggleAuthMode()">Sign In</button>';
+            } else {
+                confirmGroup.style.display = 'none';
+                authButton.textContent = 'Sign In';
+                loginText.innerHTML = 'Don\'t have an account? <button type="button" onclick="toggleAuthMode()">Create one</button>';
+            }
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('errorMessage').classList.remove('show');
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+        }
+
+        function hideError() {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.classList.remove('show');
+        }
+
+        // ========================
+        // AUTHENTICATION
+        // ========================
+        function handleAuth(event) {
+            event.preventDefault();
+            hideError();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (isSignUpMode) {
+                // Sign up
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                if (!confirmPassword) {
+                    showError('Please confirm your password');
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    showError('Passwords do not match');
+                    return;
+                }
+
+                if (users[username]) {
+                    showError('Username already exists');
+                    return;
+                }
+
+                users[username] = password;
+                localStorage.setItem('users', JSON.stringify(users));
+                showError('Account created! Please sign in.');
+                isSignUpMode = false;
+                document.getElementById('username').value = '';
+                document.getElementById('password').value = '';
+                document.getElementById('confirmPassword').value = '';
+                setTimeout(toggleAuthMode, 1500);
+            } else {
+                // Sign in
+                if (!users[username] || users[username] !== password) {
+                    showError('Invalid username or password');
+                    return;
+                }
+
+                currentUser = username;
+                document.getElementById('userDisplay').textContent = username;
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                updateUI();
+            }
+        }
+
+        // ========================
+        // DATA MANAGEMENT
+        // ========================
+        let currentUser = null;
+        let editingReceiptId = null;
+        let currentReceiptImage = null;
+        let detectedCardNumber = null;
+
+        // Get data from localStorage
+        function getStorageKey(key) {
+            if (!currentUser) return null;
+            return `${currentUser}_${key}`;
+        }
+
+        function getCards() {
+            const key = getStorageKey('cards');
+            return key ? JSON.parse(localStorage.getItem(key) || '[]') : [];
+        }
+
+        function saveCards(cards) {
+            const key = getStorageKey('cards');
+            if (key) localStorage.setItem(key, JSON.stringify(cards));
+        }
+
+        function getReceipts() {
+            const key = getStorageKey('receipts');
+            return key ? JSON.parse(localStorage.getItem(key) || '[]') : [];
+        }
+
+        function saveReceipts(receipts) {
+            const key = getStorageKey('receipts');
+            if (key) localStorage.setItem(key, JSON.stringify(receipts));
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            document.getElementById('confirmPassword').value = '';
+            isSignUpMode = false;
+            document.getElementById('confirmPasswordGroup').style.display = 'none';
+            document.getElementById('authButton').textContent = 'Sign In';
+            document.querySelector('.auth-toggle').innerHTML = 'Don\'t have an account? <button type="button" onclick="toggleAuthMode()">Create one</button>';
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+        }
+
+        // ========================
+        // TAB SWITCHING
+        // ========================
+        function switchTab(event, tabName) {
+            event.preventDefault();
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'cards') {
+                renderCards();
+            } else if (tabName === 'receipts') {
+                renderReceipts();
+            }
+        }
+
+        // ========================
+        // CARD MANAGEMENT
+        // ========================
+        function handleAddCard(event) {
+            event.preventDefault();
+            const card = {
+                id: Date.now(),
+                number: document.getElementById('cardNumber').value,
+                amount: parseFloat(document.getElementById('cardAmount').value),
+                spent: 0,
+                expiry: document.getElementById('expiryDate').value,
+                name: document.getElementById('cardName').value,
+                createdAt: new Date().toISOString()
+            };
+
+            const cards = getCards();
+            cards.push(card);
+            saveCards(cards);
+
+            // Reset form
+            event.target.reset();
+            renderCards();
+            updateUI();
+        }
+
+        function deleteCard(cardId) {
+            if (confirm('Are you sure you want to delete this card?')) {
+                let cards = getCards();
+                cards = cards.filter(c => c.id !== cardId);
+                saveCards(cards);
+
+                // Also remove associated receipts
+                let receipts = getReceipts();
+                receipts = receipts.filter(r => r.cardId !== cardId);
+                saveReceipts(receipts);
+
+                renderCards();
+                updateUI();
+            }
+        }
+
+        function renderCards() {
+            const cards = getCards();
+            const container = document.getElementById('cardsContainer');
+
+            if (cards.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No gift cards yet</h3><p>Add your first gift card above to get started!</p></div>';
+                return;
+            }
+
+            // Sort by expiry date
+            cards.sort((a, b) => new Date(a.expiry) - new Date(b.expiry));
+
+            const html = cards.map(card => {
+                const balance = card.amount - card.spent;
+                const isExpired = new Date(card.expiry) < new Date();
+                const daysUntilExpiry = Math.ceil((new Date(card.expiry) - new Date()) / (1000 * 60 * 60 * 24));
+
+                return `
+                    <div class="card-item">
+                        <div class="card-header">
+                            <div class="card-number">${card.name}</div>
+                            <div class="card-status ${isExpired ? 'expired' : 'active'}">
+                                ${isExpired ? 'Expired' : daysUntilExpiry <= 7 ? '⚠️ Expiring Soon' : 'Active'}
+                            </div>
+                        </div>
+                        <div class="card-info">
+                            <div class="card-info-item">
+                                <div class="card-info-label">Card Number</div>
+                                <div class="card-info-value">...${card.number.slice(-4)}</div>
+                            </div>
+                            <div class="card-info-item">
+                                <div class="card-info-label">Expires</div>
+                                <div class="card-info-value">${new Date(card.expiry).toLocaleDateString()}</div>
+                            </div>
+                        </div>
+                        <div class="card-info">
+                            <div class="card-info-item">
+                                <div class="card-info-label">Original Balance</div>
+                                <div class="card-info-value">$${card.amount.toFixed(2)}</div>
+                            </div>
+                            <div class="card-info-item">
+                                <div class="card-info-label">Amount Spent</div>
+                                <div class="card-info-value">$${card.spent.toFixed(2)}</div>
+                            </div>
+                        </div>
+                        <div class="card-balance">Balance: $${balance.toFixed(2)}</div>
+                        <div class="card-actions">
+                            <button class="btn btn-secondary" onclick="deleteCard(${card.id})">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        // ========================
+        // OCR RECEIPT ANALYSIS
+        // ========================
+        async function analyzeReceiptOCR(imageData) {
+            const ocrStatus = document.getElementById('ocrStatus');
+            const detectedValues = document.getElementById('detectedValues');
+            
+            ocrStatus.style.display = 'block';
+            detectedValues.style.display = 'none';
+            detectedCardNumber = null;
+
+            try {
+                const result = await Tesseract.recognize(
+                    imageData,
+                    'eng',
+                    { logger: m => console.log(m) }
+                );
+
+                const text = result.data.text.toUpperCase();
+                console.log('OCR Text:', text);
+
+                // Extract amounts (look for dollar signs and numbers)
+                const amountPattern = /\$\s*(\d+\.?\d{0,2})|(\d+\.?\d{0,2})\s*(?:USD|TOTAL|SUBTOTAL)/g;
+                const amounts = [];
+                let match;
+                while ((match = amountPattern.exec(text)) !== null) {
+                    const amount = parseFloat(match[1] || match[2]);
+                    if (amount > 0 && amount < 10000) {
+                        amounts.push(amount);
+                    }
+                }
+
+                // Extract card numbers (look for sequences of 4+ digits)
+                const cardPattern = /(?:\b|^)(\d{4}[\s\-]?\d{4}[\s\-]?\d{4}[\s\-]?\d{4}|\d{4}[\s\-]?\d{2}[\s\-]?\d{4}|\d{6,})\b/g;
+                const cardNumbers = [];
+                while ((match = cardPattern.exec(text)) !== null) {
+                    const card = match[1].replace(/\s|-/g, '');
+                    if (card.length >= 6) {
+                        cardNumbers.push(card);
+                    }
+                }
+
+                // Match card numbers with stored cards
+                const cards = getCards();
+                let matchedCard = null;
+                let matchedCardIndex = -1;
+
+                for (let i = 0; i < cards.length; i++) {
+                    const storedCard = cards[i].number.replace(/\s|-/g, '');
+                    for (const detectedCard of cardNumbers) {
+                        // Check if last 4 digits match or if full number matches
+                        if (storedCard.slice(-4) === detectedCard.slice(-4) || storedCard.includes(detectedCard) || detectedCard.includes(storedCard)) {
+                            matchedCard = cards[i];
+                            matchedCardIndex = i;
+                            detectedCardNumber = cards[i].number;
+                            break;
+                        }
+                    }
+                    if (matchedCard) break;
+                }
+
+                // Show detected values
+                let detectedHTML = '<strong>🔍 Detected Values:</strong>';
+                
+                if (matchedCard) {
+                    detectedHTML += `<div class="detection-item matched"><strong>✓ Card Found: ${matchedCard.name}</strong><br>Card ending in: ...${matchedCard.number.slice(-4)}</div>`;
+                }
+
+                if (amounts.length > 0) {
+                    const mainAmount = amounts[amounts.length - 1];
+                    detectedHTML += `<div class="detection-item"><strong>💰 Amount:</strong> $${mainAmount.toFixed(2)}</div>`;
+                }
+
+                if (cardNumbers.length > 0) {
+                    detectedHTML += `<div class="detection-item clickable" onclick="useDetectedCardNumber('${cardNumbers[0]}')"><strong>🔢 Card Number Detected:</strong><br>${cardNumbers[0]}<br><em style="font-size: 11px;">(Click to use this card number)</em></div>`;
+                    detectedCardNumber = cardNumbers[0];
+                }
+
+                if (amounts.length === 0 && cardNumbers.length === 0) {
+                    detectedHTML += '<div class="detection-item">No amounts or card numbers detected. Please enter them manually.</div>';
+                }
+
+                detectedValues.innerHTML = detectedHTML;
+                detectedValues.style.display = 'block';
+
+                // Pre-fill the form if we detected values
+                if (amounts.length > 0) {
+                    document.getElementById('editAmount').value = amounts[amounts.length - 1].toFixed(2);
+                }
+
+                // Pre-fill card number if detected
+                if (detectedCardNumber) {
+                    document.getElementById('editCardNumber').value = detectedCardNumber;
+                }
+
+                // Pre-select the matched card
+                if (matchedCard) {
+                    document.getElementById('editCard').value = matchedCard.id;
+                }
+
+                ocrStatus.style.display = 'none';
+                return { amounts, cardNumbers, matchedCard };
+            } catch (error) {
+                console.error('OCR Error:', error);
+                ocrStatus.innerHTML = '<span style="color: #d32f2f;">Failed to analyze receipt. Please enter details manually.</span>';
+                return { amounts: [], cardNumbers: [], matchedCard: null };
+            }
+        }
+
+        function useDetectedCardNumber(cardNum) {
+            document.getElementById('editCardNumber').value = cardNum;
+            detectedCardNumber = cardNum;
+        }
+
+        // ========================
+        // RECEIPT MANAGEMENT
+        // ========================
+        function handleReceiptUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                editingReceiptId = null;
+                detectedCardNumber = null;
+                currentReceiptImage = e.target.result;
+                showEditModal(null, e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showEditModal(receiptId, imageData) {
+            editingReceiptId = receiptId;
+            const modal = document.getElementById('editModal');
+
+            // Populate card dropdown
+            const cards = getCards();
+            const selectCard = document.getElementById('editCard');
+            selectCard.innerHTML = cards.map(card => 
+                `<option value="${card.id}">${card.name} (...${card.number.slice(-4)})</option>`
+            ).join('');
+
+            if (receiptId) {
+                const receipts = getReceipts();
+                const receipt = receipts.find(r => r.id === receiptId);
+                if (receipt) {
+                    document.getElementById('editAmount').value = receipt.amount;
+                    document.getElementById('editCard').value = receipt.cardId;
+                    document.getElementById('editCardNumber').value = receipt.cardNumber || '';
+                    document.getElementById('editNotes').value = receipt.notes || '';
+                }
+                document.getElementById('ocrStatus').style.display = 'none';
+                document.getElementById('detectedValues').style.display = 'none';
+            } else {
+                document.getElementById('editAmount').value = '';
+                document.getElementById('editCardNumber').value = '';
+                document.getElementById('editNotes').value = '';
+                if (cards.length > 0) {
+                    document.getElementById('editCard').value = cards[0].id;
+                }
+                // Analyze the receipt with OCR
+                if (imageData && imageData.startsWith('data:')) {
+                    analyzeReceiptOCR(imageData);
+                }
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+            editingReceiptId = null;
+            currentReceiptImage = null;
+            detectedCardNumber = null;
+            document.getElementById('ocrStatus').style.display = 'none';
+            document.getElementById('detectedValues').style.display = 'none';
+        }
+
+        function handleSaveReceipt(event) {
+            event.preventDefault();
+            const amount = parseFloat(document.getElementById('editAmount').value);
+            const cardId = parseInt(document.getElementById('editCard').value);
+            const cardNumber = document.getElementById('editCardNumber').value;
+            const notes = document.getElementById('editNotes').value;
+
+            const cards = getCards();
+            const card = cards.find(c => c.id === cardId);
+
+            if (!card) {
+                alert('Please select a valid card');
+                return;
+            }
+
+            if (editingReceiptId) {
+                // Update existing receipt
+                const receipts = getReceipts();
+                const receipt = receipts.find(r => r.id === editingReceiptId);
+                if (receipt) {
+                    // Refund old amount
+                    const cardIndex = cards.findIndex(c => c.id === receipt.cardId);
+                    if (cardIndex !== -1) {
+                        cards[cardIndex].spent -= receipt.amount;
+                    }
+                }
+                receipt.amount = amount;
+                receipt.cardId = cardId;
+                receipt.cardNumber = cardNumber;
+                receipt.notes = notes;
+                receipt.updatedAt = new Date().toISOString();
+                saveReceipts(receipts);
+            } else {
+                // Create new receipt
+                const receipt = {
+                    id: Date.now(),
+                    amount: amount,
+                    cardId: cardId,
+                    cardNumber: cardNumber,
+                    image: currentReceiptImage,
+                    notes: notes,
+                    createdAt: new Date().toISOString()
+                };
+
+                const receipts = getReceipts();
+                receipts.push(receipt);
+                saveReceipts(receipts);
+            }
+
+            // Deduct from card
+            const cardIndex = cards.findIndex(c => c.id === cardId);
+            if (cardIndex !== -1) {
+                cards[cardIndex].spent += amount;
+            }
+            saveCards(cards);
+
+            closeModal();
+            renderReceipts();
+            renderCards();
+            updateUI();
+        }
+
+        function deleteReceipt(receiptId) {
+            if (confirm('Are you sure you want to delete this receipt?')) {
+                const receipts = getReceipts();
+                const receipt = receipts.find(r => r.id === receiptId);
+
+                if (receipt) {
+                    // Refund the amount back to the card
+                    const cards = getCards();
+                    const cardIndex = cards.findIndex(c => c.id === receipt.cardId);
+                    if (cardIndex !== -1) {
+                        cards[cardIndex].spent -= receipt.amount;
+                        saveCards(cards);
+                    }
+                }
+
+                const updatedReceipts = receipts.filter(r => r.id !== receiptId);
+                saveReceipts(updatedReceipts);
+
+                renderReceipts();
+                renderCards();
+                updateUI();
+            }
+        }
+
+        function renderReceipts() {
+            const receipts = getReceipts();
+            const cards = getCards();
+            const container = document.getElementById('receiptsContainer');
+
+            if (receipts.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No receipts yet</h3><p>Upload your first receipt above to track expenses!</p></div>';
+                return;
+            }
+
+            // Sort by date (newest first)
+            receipts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            const html = receipts.map(receipt => {
+                const card = cards.find(c => c.id === receipt.cardId);
+                const cardName = card ? card.name : 'Unknown Card';
+
+                return `
+                    <div class="receipt-item">
+                        <img src="${receipt.image}" alt="Receipt" class="receipt-image">
+                        <div class="receipt-info">
+                            <div class="receipt-amount">-$${receipt.amount.toFixed(2)}</div>
+                            <div class="receipt-date">${new Date(receipt.createdAt).toLocaleDateString()}</div>
+                            <div class="receipt-card">Card: ${cardName}</div>
+                            ${receipt.cardNumber ? `<div class="receipt-card">Card #: ${receipt.cardNumber}</div>` : ''}
+                            ${receipt.notes ? `<div class="receipt-card">Note: ${receipt.notes}</div>` : ''}
+                            <div class="receipt-actions">
+                                <button class="btn btn-secondary" onclick="editReceipt(${receipt.id})">Edit</button>
+                                <button class="btn btn-danger" onclick="deleteReceipt(${receipt.id})">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        function editReceipt(receiptId) {
+            const receipts = getReceipts();
+            const receipt = receipts.find(r => r.id === receiptId);
+            if (receipt) {
+                showEditModal(receiptId, receipt.image);
+            }
+        }
+
+        // ========================
+        // UI UPDATES
+        // ========================
+        function updateUI() {
+            const cards = getCards();
+            
+            // Calculate totals
+            let totalBalance = 0;
+            let totalSpent = 0;
+            let activeCount = 0;
+
+            cards.forEach(card => {
+                const balance = card.amount - card.spent;
+                const isExpired = new Date(card.expiry) < new Date();
+                
+                totalBalance += balance;
+                totalSpent += card.spent;
+                if (!isExpired) activeCount++;
+            });
+
+            document.getElementById('totalBalance').textContent = '$' + totalBalance.toFixed(2);
+            document.getElementById('activeCards').textContent = activeCount;
+            document.getElementById('totalSpent').textContent = '$' + totalSpent.toFixed(2);
+        }
+
+        // ========================
+        // DRAG AND DROP
+        // ========================
+        const uploadArea = document.getElementById('uploadArea');
+        uploadArea.addEventListener('click', () => {
+            document.getElementById('receiptInput').click();
+        });
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const event = { target: { files: [file] } };
+                handleReceiptUpload(event);
+            }
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('editModal').addEventListener('click', (e) => {
+            if (e.target.id === 'editModal') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
