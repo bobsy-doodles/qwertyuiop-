@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gift Card Manager</title>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
-    <!-- Add Supabase Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -48,7 +47,6 @@
             }
         }
 
-        /* LOGIN PAGE */
         .login-page {
             padding: 60px 40px;
             text-align: center;
@@ -186,7 +184,6 @@
             display: block;
         }
 
-        /* MAIN APP */
         .main-app.hidden {
             display: none;
         }
@@ -274,7 +271,6 @@
             display: block;
         }
 
-        /* ADD CARD FORM */
         .form-section {
             background: #f8f9fa;
             padding: 30px;
@@ -303,7 +299,6 @@
             gap: 10px;
         }
 
-        /* CARD LIST */
         .cards-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -399,7 +394,6 @@
             font-size: 13px;
         }
 
-        /* RECEIPT UPLOAD */
         .upload-area {
             border: 3px dashed #667eea;
             border-radius: 12px;
@@ -497,7 +491,6 @@
             font-size: 12px;
         }
 
-        /* RECEIPT EDIT MODAL */
         .modal {
             display: none;
             position: fixed;
@@ -566,69 +559,6 @@
             flex: 1;
         }
 
-        .ocr-status {
-            background: #e7f3ff;
-            color: #0c5aa0;
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            font-size: 13px;
-        }
-
-        .ocr-loading {
-            display: inline-block;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .detected-values {
-            background: #f0f0f0;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 13px;
-        }
-
-        .detected-values p {
-            margin-bottom: 8px;
-        }
-
-        .detected-values strong {
-            color: #667eea;
-        }
-
-        .detection-item {
-            background: white;
-            padding: 10px;
-            margin-bottom: 8px;
-            border-radius: 6px;
-            border-left: 3px solid #667eea;
-        }
-
-        .detection-item.matched {
-            border-left-color: #28a745;
-            background: #f0f7f4;
-        }
-
-        .detection-item.matched strong {
-            color: #28a745;
-        }
-
-        .detection-item.clickable {
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .detection-item.clickable:hover {
-            background: #f5f5f5;
-            transform: translateX(3px);
-        }
-
-        /* NO DATA MESSAGES */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -640,7 +570,6 @@
             margin-bottom: 10px;
         }
 
-        /* LOADING SPINNER */
         .loading {
             display: inline-block;
             width: 20px;
@@ -651,7 +580,11 @@
             animation: spin 1s linear infinite;
         }
 
-        /* RESPONSIVE */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         @media (max-width: 768px) {
             .app-header {
                 flex-direction: column;
@@ -721,7 +654,6 @@
     </style>
 </head>
 <body>
-    <!-- LOGIN PAGE -->
     <div class="container">
         <div class="login-page" id="loginPage">
             <h1>💳 Gift Card Manager</h1>
@@ -754,7 +686,6 @@
             </div>
         </div>
 
-        <!-- MAIN APP -->
         <div class="main-app hidden" id="mainApp">
             <div class="app-header">
                 <h1>💳 Gift Card Manager</h1>
@@ -765,7 +696,6 @@
             </div>
 
             <div class="app-content">
-                <!-- STATS -->
                 <div class="stats">
                     <div class="stat-card">
                         <div class="stat-label">Total Balance</div>
@@ -781,13 +711,11 @@
                     </div>
                 </div>
 
-                <!-- TABS -->
                 <div class="tabs">
                     <button class="tab active" onclick="switchTab(event, 'cards')">My Cards</button>
                     <button class="tab" onclick="switchTab(event, 'receipts')">Receipts</button>
                 </div>
 
-                <!-- TAB: CARDS -->
                 <div class="tab-content active" id="cardsTab">
                     <div class="form-section">
                         <h2>Add New Gift Card</h2>
@@ -819,7 +747,6 @@
                     <div id="cardsContainer"></div>
                 </div>
 
-                <!-- TAB: RECEIPTS -->
                 <div class="tab-content" id="receiptsTab">
                     <div class="form-section">
                         <h2>Upload Receipt</h2>
@@ -836,14 +763,9 @@
         </div>
     </div>
 
-    <!-- EDIT RECEIPT MODAL -->
     <div class="modal" id="editModal">
         <div class="modal-content">
             <h2>Edit Receipt Details</h2>
-            <div class="ocr-status" id="ocrStatus" style="display: none;">
-                <span class="ocr-loading">⏳</span> Analyzing receipt...
-            </div>
-            <div class="detected-values" id="detectedValues" style="display: none;"></div>
             <form onsubmit="handleSaveReceipt(event)">
                 <div class="modal-form-group">
                     <label for="editAmount">Amount Spent ($)</label>
@@ -873,21 +795,21 @@
         // ========================
         // SUPABASE INITIALIZATION
         // ========================
-        // Replace these with your Supabase credentials
         const SUPABASE_URL = 'https://sycvuzhaajztybjrfumn.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5Y3Z1emhhYWp6dHlianJmdW1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MzMyOTQsImV4cCI6MjEwMDMwOTI5NH0.XrvSUmDksZkwh4ARi_pDTUX8vzhuJV4fWq27RqBM3RE';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5Y3Z1emhhYWp6dHlianJmdW1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MzMyOTQsImV4cCI6MjEwMDMwOTI5NH0.vqE82jlFfN-fVsNhGh4YZOQq6VKqvJF6NfQW8wC03Xo';
         
         const { createClient } = window.supabase;
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // ========================
-        // AUTH STATE
+        // STATE
         // ========================
         let isSignUpMode = false;
         let currentUser = null;
         let editingReceiptId = null;
         let currentReceiptImage = null;
-        let detectedCardNumber = null;
+        let cards = [];
+        let receipts = [];
 
         // Check if user is logged in on page load
         window.addEventListener('load', async () => {
@@ -897,6 +819,8 @@
                 document.getElementById('userDisplay').textContent = user.email;
                 document.getElementById('loginPage').classList.add('hidden');
                 document.getElementById('mainApp').classList.remove('hidden');
+                await loadCards();
+                await loadReceipts();
                 updateUI();
             }
         });
@@ -950,7 +874,6 @@
             const password = document.getElementById('password').value;
 
             if (isSignUpMode) {
-                // Sign up
                 const confirmPassword = document.getElementById('confirmPassword').value;
                 
                 if (!confirmPassword) {
@@ -984,7 +907,6 @@
                     setTimeout(toggleAuthMode, 2000);
                 }
             } else {
-                // Sign in
                 const { data, error } = await supabase.auth.signInWithPassword({
                     email: email,
                     password: password
@@ -999,335 +921,291 @@
                     document.getElementById('password').value = '';
                     document.getElementById('loginPage').classList.add('hidden');
                     document.getElementById('mainApp').classList.remove('hidden');
+                    await loadCards();
+                    await loadReceipts();
                     updateUI();
                 }
             }
         }
 
         async function handleLogout() {
-            const { error } = await supabase.auth.signOut();
+            await supabase.auth.signOut();
+            currentUser = null;
+            cards = [];
+            receipts = [];
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        // ========================
+        // CARD FUNCTIONS
+        // ========================
+        async function handleAddCard(event) {
+            event.preventDefault();
+
+            const card = {
+                cardNumber: document.getElementById('cardNumber').value,
+                cardAmount: parseFloat(document.getElementById('cardAmount').value),
+                expiryDate: document.getElementById('expiryDate').value,
+                cardName: document.getElementById('cardName').value,
+                userId: currentUser.id,
+                createdAt: new Date().toISOString()
+            };
+
+            const { data, error } = await supabase
+                .from('gift_cards')
+                .insert([card]);
+
             if (error) {
-                showError(error.message);
+                showError('Failed to add card: ' + error.message);
             } else {
-                currentUser = null;
-                document.getElementById('email').value = '';
-                document.getElementById('password').value = '';
-                document.getElementById('confirmPassword').value = '';
-                isSignUpMode = false;
-                document.getElementById('confirmPasswordGroup').style.display = 'none';
-                document.getElementById('authButton').textContent = 'Sign In';
-                document.querySelector('.auth-toggle').innerHTML = 'Don\'t have an account? <button type="button" onclick="toggleAuthMode()">Create one</button>';
-                document.getElementById('loginPage').classList.remove('hidden');
-                document.getElementById('mainApp').classList.add('hidden');
+                showSuccess('Card added successfully!');
+                document.getElementById('cardNumber').value = '';
+                document.getElementById('cardAmount').value = '';
+                document.getElementById('expiryDate').value = '';
+                document.getElementById('cardName').value = '';
+                await loadCards();
+                updateUI();
             }
         }
 
-        // ========================
-        // GIFT CARDS MANAGEMENT
-        // ========================
-        async function getCards() {
-            if (!currentUser) return [];
+        async function loadCards() {
             const { data, error } = await supabase
                 .from('gift_cards')
                 .select('*')
-                .eq('user_id', currentUser.id)
-                .order('created_at', { ascending: false });
-            return error ? [] : data;
-        }
+                .eq('userId', currentUser.id);
 
-        async function addCard(cardNumber, cardAmount, expiryDate, cardName) {
-            if (!currentUser) return;
-            const { data, error } = await supabase
-                .from('gift_cards')
-                .insert({
-                    user_id: currentUser.id,
-                    card_number: cardNumber,
-                    balance: parseFloat(cardAmount),
-                    expiry_date: expiryDate,
-                    card_name: cardName
-                });
-            return error ? null : data;
-        }
-
-        async function updateCard(cardId, updates) {
-            if (!currentUser) return;
-            const { data, error } = await supabase
-                .from('gift_cards')
-                .update(updates)
-                .eq('id', cardId)
-                .eq('user_id', currentUser.id);
-            return error ? null : data;
+            if (!error) {
+                cards = data || [];
+            }
         }
 
         async function deleteCard(cardId) {
-            if (!currentUser) return;
-            const { error } = await supabase
-                .from('gift_cards')
-                .delete()
-                .eq('id', cardId)
-                .eq('user_id', currentUser.id);
-            return !error;
-        }
-
-        async function handleAddCard(event) {
-            event.preventDefault();
-            const cardNumber = document.getElementById('cardNumber').value;
-            const cardAmount = document.getElementById('cardAmount').value;
-            const expiryDate = document.getElementById('expiryDate').value;
-            const cardName = document.getElementById('cardName').value;
-
-            await addCard(cardNumber, cardAmount, expiryDate, cardName);
-            
-            document.getElementById('cardNumber').value = '';
-            document.getElementById('cardAmount').value = '';
-            document.getElementById('expiryDate').value = '';
-            document.getElementById('cardName').value = '';
-            showSuccess('Gift card added successfully!');
-            
-            setTimeout(() => {
-                renderCards();
-            }, 500);
-        }
-
-        async function renderCards() {
-            const cards = await getCards();
-            const container = document.getElementById('cardsContainer');
-
-            if (cards.length === 0) {
-                container.innerHTML = '<div class="empty-state"><h3>No gift cards yet</h3><p>Add your first gift card to get started!</p></div>';
-                updateStats(cards, []);
-                return;
-            }
-
-            container.innerHTML = cards.map(card => {
-                const today = new Date();
-                const expiry = new Date(card.expiry_date);
-                const isExpired = expiry < today;
-
-                return `
-                    <div class="card-item">
-                        <div class="card-header">
-                            <div class="card-number">****${card.card_number.slice(-4)}</div>
-                            <span class="card-status ${isExpired ? 'expired' : 'active'}">
-                                ${isExpired ? 'Expired' : 'Active'}
-                            </span>
-                        </div>
-                        <div class="card-info">
-                            <div class="card-info-item">
-                                <span class="card-info-label">Store</span>
-                                <span class="card-info-value">${card.card_name}</span>
-                            </div>
-                            <div class="card-info-item">
-                                <span class="card-info-label">Expires</span>
-                                <span class="card-info-value">${new Date(card.expiry_date).toLocaleDateString()}</span>
-                            </div>
-                        </div>
-                        <div class="card-balance">$${parseFloat(card.balance).toFixed(2)}</div>
-                        <div class="card-actions">
-                            <button class="btn btn-secondary" onclick="editBalance('${card.id}', '${card.balance}', '${card.card_name}')">Update Balance</button>
-                            <button class="btn btn-danger" onclick="deleteCardHandler('${card.id}')">Delete</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-            updateStats(cards, []);
-        }
-
-        async function editBalance(cardId, currentBalance, cardName) {
-            const newBalance = prompt(`Enter new balance for ${cardName}:`, currentBalance);
-            if (newBalance !== null) {
-                await updateCard(cardId, { balance: parseFloat(newBalance) });
-                showSuccess('Card balance updated!');
-                renderCards();
-            }
-        }
-
-        async function deleteCardHandler(cardId) {
             if (confirm('Are you sure you want to delete this card?')) {
-                await deleteCard(cardId);
-                showSuccess('Card deleted!');
-                renderCards();
+                const { error } = await supabase
+                    .from('gift_cards')
+                    .delete()
+                    .eq('id', cardId);
+
+                if (error) {
+                    showError('Failed to delete card');
+                } else {
+                    await loadCards();
+                    updateUI();
+                }
             }
         }
 
         // ========================
-        // RECEIPTS MANAGEMENT
+        // RECEIPT FUNCTIONS
         // ========================
-        async function getReceipts() {
-            if (!currentUser) return [];
-            const { data, error } = await supabase
-                .from('receipts')
-                .select('*')
-                .eq('user_id', currentUser.id)
-                .order('created_at', { ascending: false });
-            return error ? [] : data;
-        }
-
-        async function addReceipt(amount, cardId, cardNumber, notes, imageData) {
-            if (!currentUser) return;
-            const { data, error } = await supabase
-                .from('receipts')
-                .insert({
-                    user_id: currentUser.id,
-                    card_id: cardId,
-                    amount: parseFloat(amount),
-                    card_number_from_receipt: cardNumber,
-                    notes: notes,
-                    image_data: imageData
-                });
-            return error ? null : data;
-        }
-
-        async function deleteReceipt(receiptId) {
-            if (!currentUser) return;
-            const { error } = await supabase
-                .from('receipts')
-                .delete()
-                .eq('id', receiptId)
-                .eq('user_id', currentUser.id);
-            return !error;
-        }
-
         async function handleReceiptUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
 
+            if (file.size > 5 * 1024 * 1024) {
+                showError('File too large. Max 5MB.');
+                return;
+            }
+
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = async (e) => {
                 currentReceiptImage = e.target.result;
-                document.getElementById('ocrStatus').style.display = 'block';
-
-                // OCR processing
-                Tesseract.recognize(file, 'eng').then(({ data: { text } }) => {
-                    document.getElementById('ocrStatus').style.display = 'none';
-
-                    // Extract numbers that could be amounts or card numbers
-                    const numbers = text.match(/\$?\d+(\.\d{2})?|\d{16,}/g) || [];
-                    const amounts = text.match(/\$?\d+\.\d{2}/g) || [];
-
-                    let detectedHTML = '<p><strong>Detected Information:</strong></p>';
-                    if (amounts.length > 0) {
-                        detectedHTML += `<div class="detection-item clickable" onclick="setAmount('${amounts[0].replace(/[$]/g, '').trim()}')"><strong>Amount:</strong> ${amounts[0]}</div>`;
-                    }
-
-                    document.getElementById('detectedValues').innerHTML = detectedHTML;
-                    document.getElementById('detectedValues').style.display = 'block';
-
-                    // Open modal for editing
-                    document.getElementById('editModal').classList.add('active');
-                    const cardSelect = document.getElementById('editCard');
-                    
-                    getCards().then(cards => {
-                        cardSelect.innerHTML = cards.map(c => 
-                            `<option value="${c.id}">${c.card_name}</option>`
-                        ).join('');
-                    });
+                editingReceiptId = null;
+                document.getElementById('editAmount').value = '';
+                document.getElementById('editCard').value = '';
+                document.getElementById('editCardNumber').value = '';
+                document.getElementById('editNotes').value = '';
+                
+                // Populate card dropdown
+                const cardSelect = document.getElementById('editCard');
+                cardSelect.innerHTML = '';
+                cards.forEach(card => {
+                    const option = document.createElement('option');
+                    option.value = card.id;
+                    option.textContent = card.cardName + ' - ' + card.cardNumber.slice(-4);
+                    cardSelect.appendChild(option);
                 });
+
+                openModal();
+                document.getElementById('receiptInput').value = '';
             };
             reader.readAsDataURL(file);
         }
 
-        function setAmount(amount) {
-            document.getElementById('editAmount').value = amount;
-        }
-
         async function handleSaveReceipt(event) {
             event.preventDefault();
-            const amount = document.getElementById('editAmount').value;
-            const cardId = document.getElementById('editCard').value;
-            const notes = document.getElementById('editNotes').value;
 
-            const card = (await getCards()).find(c => c.id === cardId);
-            if (!card) return;
+            const receipt = {
+                amount: parseFloat(document.getElementById('editAmount').value),
+                cardId: document.getElementById('editCard').value,
+                cardNumber: document.getElementById('editCardNumber').value,
+                notes: document.getElementById('editNotes').value,
+                userId: currentUser.id,
+                image: currentReceiptImage,
+                date: new Date().toISOString()
+            };
 
-            // Update card balance
-            const newBalance = card.balance - parseFloat(amount);
-            await updateCard(cardId, { balance: newBalance });
+            const { data, error } = await supabase
+                .from('receipts')
+                .insert([receipt]);
 
-            // Add receipt
-            await addReceipt(amount, cardId, '', notes, currentReceiptImage);
+            if (error) {
+                showError('Failed to save receipt: ' + error.message);
+            } else {
+                showSuccess('Receipt saved!');
+                closeModal();
+                await loadReceipts();
+                await updateCardBalance(receipt.cardId, receipt.amount);
+                updateUI();
+            }
+        }
 
-            showSuccess('Receipt saved and card balance updated!');
-            closeModal();
+        async function loadReceipts() {
+            const { data, error } = await supabase
+                .from('receipts')
+                .select('*')
+                .eq('userId', currentUser.id);
+
+            if (!error) {
+                receipts = data || [];
+            }
+        }
+
+        async function deleteReceipt(receiptId, cardId, amount) {
+            if (confirm('Are you sure you want to delete this receipt?')) {
+                const { error } = await supabase
+                    .from('receipts')
+                    .delete()
+                    .eq('id', receiptId);
+
+                if (error) {
+                    showError('Failed to delete receipt');
+                } else {
+                    await loadReceipts();
+                    await updateCardBalance(cardId, -amount);
+                    updateUI();
+                }
+            }
+        }
+
+        async function updateCardBalance(cardId, amountSpent) {
+            const card = cards.find(c => c.id === cardId);
+            if (card) {
+                const newBalance = card.cardAmount - amountSpent;
+                const { error } = await supabase
+                    .from('gift_cards')
+                    .update({ cardAmount: newBalance })
+                    .eq('id', cardId);
+
+                if (!error) {
+                    await loadCards();
+                }
+            }
+        }
+
+        // ========================
+        // UI FUNCTIONS
+        // ========================
+        function switchTab(event, tab) {
+            event.preventDefault();
+            
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(c => c.classList.remove('active'));
+            document.getElementById(tab + 'Tab').classList.add('active');
+        }
+
+        function updateUI() {
             renderCards();
             renderReceipts();
+            updateStats();
+        }
 
-            document.getElementById('receiptInput').value = '';
+        function renderCards() {
+            const container = document.getElementById('cardsContainer');
+            
+            if (cards.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No cards yet</h3><p>Add your first gift card to get started!</p></div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="cards-grid">' + 
+                cards.map(card => {
+                    const expired = new Date(card.expiryDate) < new Date();
+                    return `
+                        <div class="card-item">
+                            <div class="card-header">
+                                <div class="card-number">${card.cardNumber}</div>
+                                <span class="card-status ${expired ? 'expired' : 'active'}">${expired ? 'Expired' : 'Active'}</span>
+                            </div>
+                            <div class="card-info">
+                                <div class="card-info-item">
+                                    <div class="card-info-label">Store</div>
+                                    <div class="card-info-value">${card.cardName}</div>
+                                </div>
+                                <div class="card-info-item">
+                                    <div class="card-info-label">Expires</div>
+                                    <div class="card-info-value">${new Date(card.expiryDate).toLocaleDateString()}</div>
+                                </div>
+                            </div>
+                            <div class="card-balance">$${card.cardAmount.toFixed(2)}</div>
+                            <div class="card-actions">
+                                <button class="btn btn-danger" onclick="deleteCard('${card.id}')">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('') + '</div>';
+        }
+
+        function renderReceipts() {
+            const container = document.getElementById('receiptsContainer');
+            
+            if (receipts.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No receipts yet</h3><p>Upload your first receipt to track spending!</p></div>';
+                return;
+            }
+
+            container.innerHTML = '<div class="receipt-list">' + 
+                receipts.map(receipt => {
+                    const card = cards.find(c => c.id === receipt.cardId);
+                    return `
+                        <div class="receipt-item">
+                            <img src="${receipt.image}" class="receipt-image" alt="Receipt">
+                            <div class="receipt-info">
+                                <div class="receipt-amount">$${receipt.amount.toFixed(2)}</div>
+                                <div class="receipt-date">${new Date(receipt.date).toLocaleDateString()}</div>
+                                <div class="receipt-card">${card ? card.cardName : 'Unknown'}</div>
+                                <div class="receipt-actions">
+                                    <button class="btn btn-danger" onclick="deleteReceipt('${receipt.id}', '${receipt.cardId}', ${receipt.amount})">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('') + '</div>';
+        }
+
+        function updateStats() {
+            const totalBalance = cards.reduce((sum, card) => sum + card.cardAmount, 0);
+            const activeCards = cards.filter(card => new Date(card.expiryDate) > new Date()).length;
+            const totalSpent = receipts.reduce((sum, receipt) => sum + receipt.amount, 0);
+
+            document.getElementById('totalBalance').textContent = '$' + totalBalance.toFixed(2);
+            document.getElementById('activeCards').textContent = activeCards;
+            document.getElementById('totalSpent').textContent = '$' + totalSpent.toFixed(2);
+        }
+
+        function openModal() {
+            document.getElementById('editModal').classList.add('active');
         }
 
         function closeModal() {
             document.getElementById('editModal').classList.remove('active');
-            document.getElementById('editAmount').value = '';
-            document.getElementById('editNotes').value = '';
-            document.getElementById('detectedValues').style.display = 'none';
-        }
-
-        async function renderReceipts() {
-            const receipts = await getReceipts();
-            const container = document.getElementById('receiptsContainer');
-
-            if (receipts.length === 0) {
-                container.innerHTML = '<div class="empty-state"><h3>No receipts yet</h3><p>Upload your first receipt to track expenses!</p></div>';
-                return;
-            }
-
-            container.innerHTML = `<div class="receipt-list">${receipts.map(receipt => `
-                <div class="receipt-item">
-                    <img src="${receipt.image_data}" class="receipt-image" alt="Receipt">
-                    <div class="receipt-info">
-                        <div class="receipt-amount">-$${parseFloat(receipt.amount).toFixed(2)}</div>
-                        <div class="receipt-date">${new Date(receipt.created_at).toLocaleDateString()}</div>
-                        ${receipt.notes ? `<div class="receipt-card">${receipt.notes}</div>` : ''}
-                        <div class="receipt-actions">
-                            <button class="btn btn-danger" onclick="deleteReceiptHandler('${receipt.id}')">Delete</button>
-                        </div>
-                    </div>
-                </div>
-            `).join('')}</div>`;
-        }
-
-        async function deleteReceiptHandler(receiptId) {
-            if (confirm('Delete this receipt?')) {
-                await deleteReceipt(receiptId);
-                showSuccess('Receipt deleted!');
-                renderReceipts();
-            }
-        }
-
-        // ========================
-        // UI UPDATES
-        // ========================
-        function switchTab(event, tabName) {
-            event.preventDefault();
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-
-            document.getElementById(tabName + 'Tab').classList.add('active');
-            event.target.classList.add('active');
-
-            if (tabName === 'cards') {
-                renderCards();
-            } else if (tabName === 'receipts') {
-                renderReceipts();
-            }
-        }
-
-        async function updateStats(cards, receipts) {
-            const totalBalance = cards.reduce((sum, card) => sum + parseFloat(card.balance), 0);
-            const activeCards = cards.filter(c => new Date(c.expiry_date) >= new Date()).length;
-            const totalSpent = receipts.reduce((sum, r) => sum + parseFloat(r.amount), 0);
-
-            document.getElementById('totalBalance').textContent = `$${totalBalance.toFixed(2)}`;
-            document.getElementById('activeCards').textContent = activeCards;
-            document.getElementById('totalSpent').textContent = `$${totalSpent.toFixed(2)}`;
-        }
-
-        async function updateUI() {
-            const cards = await getCards();
-            const receipts = await getReceipts();
-            updateStats(cards, receipts);
-            renderCards();
         }
     </script>
 </body>
