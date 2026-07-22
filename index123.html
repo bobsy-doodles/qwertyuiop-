@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gift Card Manager</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+    <!-- Add Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 1000px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .login-page, .main-app {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* LOGIN PAGE */
+        .login-page {
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .login-page.hidden {
+            display: none;
+        }
+
+        .login-page h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .login-page p {
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            text-align: left;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .auth-buttons button {
+            flex: 1;
+        }
+
+        .auth-toggle {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .auth-toggle button {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            margin-right: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff5252;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        /* MAIN APP */
+        .main-app.hidden {
+            display: none;
+        }
+
+        .app-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .app-header h1 {
+            font-size: 28px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-info span {
+            opacity: 0.9;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid white;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .app-content {
+            padding: 40px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #999;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tab.active {
+            color: #667eea;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* ADD CARD FORM */
+        .form-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .form-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-grid.full {
+            grid-template-columns: 1fr;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* CARD LIST */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .card-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .card-number {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            word-break: break-all;
+        }
+
+        .card-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .card-status.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .card-status.expired {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .card-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .card-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-info-label {
+            font-size: 12px;
+            color: #999;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .card-info-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .card-balance {
+            font-size: 24px;
+            color: #667eea;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .card-actions button {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 13px;
+        }
+
+        /* RECEIPT UPLOAD */
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .upload-area:hover {
+            background: #f0f0ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background: #e8eaf6;
+            border-color: #764ba2;
+            transform: scale(1.02);
+        }
+
+        .upload-area p {
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .upload-area small {
+            color: #999;
+        }
+
+        #receiptInput {
+            display: none;
+        }
+
+        .receipt-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .receipt-item {
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .receipt-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .receipt-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+
+        .receipt-info {
+            padding: 15px;
+        }
+
+        .receipt-amount {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .receipt-date {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .receipt-card {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+
+        .receipt-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .receipt-actions button {
+            flex: 1;
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+
+        /* RECEIPT EDIT MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .modal-form-group {
+            margin-bottom: 20px;
+        }
+
+        .modal-form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .modal-form-group input, .modal-form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .modal-form-group input:focus, .modal-form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+        }
+
+        .ocr-status {
+            background: #e7f3ff;
+            color: #0c5aa0;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+
+        .ocr-loading {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .detected-values {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .detected-values p {
+            margin-bottom: 8px;
+        }
+
+        .detected-values strong {
+            color: #667eea;
+        }
+
+        .detection-item {
+            background: white;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .detection-item.matched {
+            border-left-color: #28a745;
+            background: #f0f7f4;
+        }
+
+        .detection-item.matched strong {
+            color: #28a745;
+        }
+
+        .detection-item.clickable {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .detection-item.clickable:hover {
+            background: #f5f5f5;
+            transform: translateX(3px);
+        }
+
+        /* NO DATA MESSAGES */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state h3 {
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        /* LOADING SPINNER */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .app-header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .user-info {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .logout-btn {
+                width: 100%;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .form-actions button {
+                width: 100%;
+            }
+
+            .auth-buttons {
+                flex-direction: column;
+            }
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN PAGE -->
+    <div class="container">
+        <div class="login-page" id="loginPage">
+            <h1>💳 Gift Card Manager</h1>
+            <p>Track your gift cards and receipt expenses</p>
+            
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+
+            <form id="authForm" onsubmit="handleAuth(event)">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" required placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required placeholder="Enter your password">
+                </div>
+                <div class="form-group" id="confirmPasswordGroup" style="display: none;">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" placeholder="Confirm your password">
+                </div>
+                <div class="auth-buttons">
+                    <button type="submit" class="btn btn-primary" id="authButton">Sign In</button>
+                </div>
+            </form>
+
+            <div class="auth-toggle">
+                Don't have an account? 
+                <button type="button" onclick="toggleAuthMode()">Create one</button>
+            </div>
+        </div>
+
+        <!-- MAIN APP -->
+        <div class="main-app hidden" id="mainApp">
+            <div class="app-header">
+                <h1>💳 Gift Card Manager</h1>
+                <div class="user-info">
+                    <span>Welcome, <strong id="userDisplay">User</strong></span>
+                    <button class="logout-btn" onclick="handleLogout()">Logout</button>
+                </div>
+            </div>
+
+            <div class="app-content">
+                <!-- STATS -->
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Balance</div>
+                        <div class="stat-value" id="totalBalance">$0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Active Cards</div>
+                        <div class="stat-value" id="activeCards">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Total Spent</div>
+                        <div class="stat-value" id="totalSpent">$0.00</div>
+                    </div>
+                </div>
+
+                <!-- TABS -->
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab(event, 'cards')">My Cards</button>
+                    <button class="tab" onclick="switchTab(event, 'receipts')">Receipts</button>
+                </div>
+
+                <!-- TAB: CARDS -->
+                <div class="tab-content active" id="cardsTab">
+                    <div class="form-section">
+                        <h2>Add New Gift Card</h2>
+                        <form onsubmit="handleAddCard(event)">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="cardNumber">Card Number</label>
+                                    <input type="text" id="cardNumber" placeholder="Enter card number" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cardAmount">Balance ($)</label>
+                                    <input type="number" id="cardAmount" step="0.01" placeholder="0.00" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="expiryDate">Expiry Date</label>
+                                    <input type="date" id="expiryDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="cardName">Card Name/Store</label>
+                                    <input type="text" id="cardName" placeholder="e.g., Amazon, Best Buy" required>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Add Card</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="cardsContainer"></div>
+                </div>
+
+                <!-- TAB: RECEIPTS -->
+                <div class="tab-content" id="receiptsTab">
+                    <div class="form-section">
+                        <h2>Upload Receipt</h2>
+                        <div class="upload-area" id="uploadArea" onclick="document.getElementById('receiptInput').click()">
+                            <p>📸 Click to Upload Receipt</p>
+                            <small>Supported: JPG, PNG, WebP (max 5MB)</small>
+                        </div>
+                        <input type="file" id="receiptInput" accept="image/*" onchange="handleReceiptUpload(event)">
+                    </div>
+
+                    <div id="receiptsContainer"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT RECEIPT MODAL -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h2>Edit Receipt Details</h2>
+            <div class="ocr-status" id="ocrStatus" style="display: none;">
+                <span class="ocr-loading">⏳</span> Analyzing receipt...
+            </div>
+            <div class="detected-values" id="detectedValues" style="display: none;"></div>
+            <form onsubmit="handleSaveReceipt(event)">
+                <div class="modal-form-group">
+                    <label for="editAmount">Amount Spent ($)</label>
+                    <input type="number" id="editAmount" step="0.01" required>
+                </div>
+                <div class="modal-form-group">
+                    <label for="editCard">Card Used</label>
+                    <select id="editCard" required></select>
+                </div>
+                <div class="modal-form-group">
+                    <label for="editCardNumber">Card Number (from receipt)</label>
+                    <input type="text" id="editCardNumber" placeholder="Card number detected from receipt" readonly>
+                </div>
+                <div class="modal-form-group">
+                    <label for="editNotes">Notes</label>
+                    <input type="text" id="editNotes" placeholder="Optional notes">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ========================
+        // SUPABASE INITIALIZATION
+        // ========================
+        // Replace these with your Supabase credentials
+        const SUPABASE_URL = 'https://sycvuzhaajztybjrfumn.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5Y3Z1emhhYWp6dHlianJmdW1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3MzMyOTQsImV4cCI6MjEwMDMwOTI5NH0.XrvSUmDksZkwh4ARi_pDTUX8vzhuJV4fWq27RqBM3RE';
+        
+        const { createClient } = window.supabase;
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ========================
+        // AUTH STATE
+        // ========================
+        let isSignUpMode = false;
+        let currentUser = null;
+        let editingReceiptId = null;
+        let currentReceiptImage = null;
+        let detectedCardNumber = null;
+
+        // Check if user is logged in on page load
+        window.addEventListener('load', async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                currentUser = user;
+                document.getElementById('userDisplay').textContent = user.email;
+                document.getElementById('loginPage').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+                updateUI();
+            }
+        });
+
+        // ========================
+        // AUTH FUNCTIONS
+        // ========================
+        function toggleAuthMode() {
+            isSignUpMode = !isSignUpMode;
+            const confirmGroup = document.getElementById('confirmPasswordGroup');
+            const authButton = document.getElementById('authButton');
+            const loginText = document.querySelector('.auth-toggle');
+
+            if (isSignUpMode) {
+                confirmGroup.style.display = 'block';
+                authButton.textContent = 'Create Account';
+                loginText.innerHTML = 'Already have an account? <button type="button" onclick="toggleAuthMode()">Sign In</button>';
+            } else {
+                confirmGroup.style.display = 'none';
+                authButton.textContent = 'Sign In';
+                loginText.innerHTML = 'Don\'t have an account? <button type="button" onclick="toggleAuthMode()">Create one</button>';
+            }
+            document.getElementById('confirmPassword').value = '';
+            hideError();
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            document.getElementById('successMessage').classList.remove('show');
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.classList.add('show');
+            document.getElementById('errorMessage').classList.remove('show');
+        }
+
+        function hideError() {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.classList.remove('show');
+        }
+
+        async function handleAuth(event) {
+            event.preventDefault();
+            hideError();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (isSignUpMode) {
+                // Sign up
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                if (!confirmPassword) {
+                    showError('Please confirm your password');
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    showError('Passwords do not match');
+                    return;
+                }
+
+                if (password.length < 6) {
+                    showError('Password must be at least 6 characters');
+                    return;
+                }
+
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    showError(error.message);
+                } else {
+                    showSuccess('Account created! Please check your email to confirm.');
+                    document.getElementById('email').value = '';
+                    document.getElementById('password').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                    isSignUpMode = false;
+                    setTimeout(toggleAuthMode, 2000);
+                }
+            } else {
+                // Sign in
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    showError(error.message);
+                } else {
+                    currentUser = data.user;
+                    document.getElementById('userDisplay').textContent = email;
+                    document.getElementById('email').value = '';
+                    document.getElementById('password').value = '';
+                    document.getElementById('loginPage').classList.add('hidden');
+                    document.getElementById('mainApp').classList.remove('hidden');
+                    updateUI();
+                }
+            }
+        }
+
+        async function handleLogout() {
+            const { error } = await supabase.auth.signOut();
+            if (error) {
+                showError(error.message);
+            } else {
+                currentUser = null;
+                document.getElementById('email').value = '';
+                document.getElementById('password').value = '';
+                document.getElementById('confirmPassword').value = '';
+                isSignUpMode = false;
+                document.getElementById('confirmPasswordGroup').style.display = 'none';
+                document.getElementById('authButton').textContent = 'Sign In';
+                document.querySelector('.auth-toggle').innerHTML = 'Don\'t have an account? <button type="button" onclick="toggleAuthMode()">Create one</button>';
+                document.getElementById('loginPage').classList.remove('hidden');
+                document.getElementById('mainApp').classList.add('hidden');
+            }
+        }
+
+        // ========================
+        // GIFT CARDS MANAGEMENT
+        // ========================
+        async function getCards() {
+            if (!currentUser) return [];
+            const { data, error } = await supabase
+                .from('gift_cards')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('created_at', { ascending: false });
+            return error ? [] : data;
+        }
+
+        async function addCard(cardNumber, cardAmount, expiryDate, cardName) {
+            if (!currentUser) return;
+            const { data, error } = await supabase
+                .from('gift_cards')
+                .insert({
+                    user_id: currentUser.id,
+                    card_number: cardNumber,
+                    balance: parseFloat(cardAmount),
+                    expiry_date: expiryDate,
+                    card_name: cardName
+                });
+            return error ? null : data;
+        }
+
+        async function updateCard(cardId, updates) {
+            if (!currentUser) return;
+            const { data, error } = await supabase
+                .from('gift_cards')
+                .update(updates)
+                .eq('id', cardId)
+                .eq('user_id', currentUser.id);
+            return error ? null : data;
+        }
+
+        async function deleteCard(cardId) {
+            if (!currentUser) return;
+            const { error } = await supabase
+                .from('gift_cards')
+                .delete()
+                .eq('id', cardId)
+                .eq('user_id', currentUser.id);
+            return !error;
+        }
+
+        async function handleAddCard(event) {
+            event.preventDefault();
+            const cardNumber = document.getElementById('cardNumber').value;
+            const cardAmount = document.getElementById('cardAmount').value;
+            const expiryDate = document.getElementById('expiryDate').value;
+            const cardName = document.getElementById('cardName').value;
+
+            await addCard(cardNumber, cardAmount, expiryDate, cardName);
+            
+            document.getElementById('cardNumber').value = '';
+            document.getElementById('cardAmount').value = '';
+            document.getElementById('expiryDate').value = '';
+            document.getElementById('cardName').value = '';
+            showSuccess('Gift card added successfully!');
+            
+            setTimeout(() => {
+                renderCards();
+            }, 500);
+        }
+
+        async function renderCards() {
+            const cards = await getCards();
+            const container = document.getElementById('cardsContainer');
+
+            if (cards.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No gift cards yet</h3><p>Add your first gift card to get started!</p></div>';
+                updateStats(cards, []);
+                return;
+            }
+
+            container.innerHTML = cards.map(card => {
+                const today = new Date();
+                const expiry = new Date(card.expiry_date);
+                const isExpired = expiry < today;
+
+                return `
+                    <div class="card-item">
+                        <div class="card-header">
+                            <div class="card-number">****${card.card_number.slice(-4)}</div>
+                            <span class="card-status ${isExpired ? 'expired' : 'active'}">
+                                ${isExpired ? 'Expired' : 'Active'}
+                            </span>
+                        </div>
+                        <div class="card-info">
+                            <div class="card-info-item">
+                                <span class="card-info-label">Store</span>
+                                <span class="card-info-value">${card.card_name}</span>
+                            </div>
+                            <div class="card-info-item">
+                                <span class="card-info-label">Expires</span>
+                                <span class="card-info-value">${new Date(card.expiry_date).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                        <div class="card-balance">$${parseFloat(card.balance).toFixed(2)}</div>
+                        <div class="card-actions">
+                            <button class="btn btn-secondary" onclick="editBalance('${card.id}', '${card.balance}', '${card.card_name}')">Update Balance</button>
+                            <button class="btn btn-danger" onclick="deleteCardHandler('${card.id}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            updateStats(cards, []);
+        }
+
+        async function editBalance(cardId, currentBalance, cardName) {
+            const newBalance = prompt(`Enter new balance for ${cardName}:`, currentBalance);
+            if (newBalance !== null) {
+                await updateCard(cardId, { balance: parseFloat(newBalance) });
+                showSuccess('Card balance updated!');
+                renderCards();
+            }
+        }
+
+        async function deleteCardHandler(cardId) {
+            if (confirm('Are you sure you want to delete this card?')) {
+                await deleteCard(cardId);
+                showSuccess('Card deleted!');
+                renderCards();
+            }
+        }
+
+        // ========================
+        // RECEIPTS MANAGEMENT
+        // ========================
+        async function getReceipts() {
+            if (!currentUser) return [];
+            const { data, error } = await supabase
+                .from('receipts')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('created_at', { ascending: false });
+            return error ? [] : data;
+        }
+
+        async function addReceipt(amount, cardId, cardNumber, notes, imageData) {
+            if (!currentUser) return;
+            const { data, error } = await supabase
+                .from('receipts')
+                .insert({
+                    user_id: currentUser.id,
+                    card_id: cardId,
+                    amount: parseFloat(amount),
+                    card_number_from_receipt: cardNumber,
+                    notes: notes,
+                    image_data: imageData
+                });
+            return error ? null : data;
+        }
+
+        async function deleteReceipt(receiptId) {
+            if (!currentUser) return;
+            const { error } = await supabase
+                .from('receipts')
+                .delete()
+                .eq('id', receiptId)
+                .eq('user_id', currentUser.id);
+            return !error;
+        }
+
+        async function handleReceiptUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentReceiptImage = e.target.result;
+                document.getElementById('ocrStatus').style.display = 'block';
+
+                // OCR processing
+                Tesseract.recognize(file, 'eng').then(({ data: { text } }) => {
+                    document.getElementById('ocrStatus').style.display = 'none';
+
+                    // Extract numbers that could be amounts or card numbers
+                    const numbers = text.match(/\$?\d+(\.\d{2})?|\d{16,}/g) || [];
+                    const amounts = text.match(/\$?\d+\.\d{2}/g) || [];
+
+                    let detectedHTML = '<p><strong>Detected Information:</strong></p>';
+                    if (amounts.length > 0) {
+                        detectedHTML += `<div class="detection-item clickable" onclick="setAmount('${amounts[0].replace(/[$]/g, '').trim()}')"><strong>Amount:</strong> ${amounts[0]}</div>`;
+                    }
+
+                    document.getElementById('detectedValues').innerHTML = detectedHTML;
+                    document.getElementById('detectedValues').style.display = 'block';
+
+                    // Open modal for editing
+                    document.getElementById('editModal').classList.add('active');
+                    const cardSelect = document.getElementById('editCard');
+                    
+                    getCards().then(cards => {
+                        cardSelect.innerHTML = cards.map(c => 
+                            `<option value="${c.id}">${c.card_name}</option>`
+                        ).join('');
+                    });
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function setAmount(amount) {
+            document.getElementById('editAmount').value = amount;
+        }
+
+        async function handleSaveReceipt(event) {
+            event.preventDefault();
+            const amount = document.getElementById('editAmount').value;
+            const cardId = document.getElementById('editCard').value;
+            const notes = document.getElementById('editNotes').value;
+
+            const card = (await getCards()).find(c => c.id === cardId);
+            if (!card) return;
+
+            // Update card balance
+            const newBalance = card.balance - parseFloat(amount);
+            await updateCard(cardId, { balance: newBalance });
+
+            // Add receipt
+            await addReceipt(amount, cardId, '', notes, currentReceiptImage);
+
+            showSuccess('Receipt saved and card balance updated!');
+            closeModal();
+            renderCards();
+            renderReceipts();
+
+            document.getElementById('receiptInput').value = '';
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+            document.getElementById('editAmount').value = '';
+            document.getElementById('editNotes').value = '';
+            document.getElementById('detectedValues').style.display = 'none';
+        }
+
+        async function renderReceipts() {
+            const receipts = await getReceipts();
+            const container = document.getElementById('receiptsContainer');
+
+            if (receipts.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No receipts yet</h3><p>Upload your first receipt to track expenses!</p></div>';
+                return;
+            }
+
+            container.innerHTML = `<div class="receipt-list">${receipts.map(receipt => `
+                <div class="receipt-item">
+                    <img src="${receipt.image_data}" class="receipt-image" alt="Receipt">
+                    <div class="receipt-info">
+                        <div class="receipt-amount">-$${parseFloat(receipt.amount).toFixed(2)}</div>
+                        <div class="receipt-date">${new Date(receipt.created_at).toLocaleDateString()}</div>
+                        ${receipt.notes ? `<div class="receipt-card">${receipt.notes}</div>` : ''}
+                        <div class="receipt-actions">
+                            <button class="btn btn-danger" onclick="deleteReceiptHandler('${receipt.id}')">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}</div>`;
+        }
+
+        async function deleteReceiptHandler(receiptId) {
+            if (confirm('Delete this receipt?')) {
+                await deleteReceipt(receiptId);
+                showSuccess('Receipt deleted!');
+                renderReceipts();
+            }
+        }
+
+        // ========================
+        // UI UPDATES
+        // ========================
+        function switchTab(event, tabName) {
+            event.preventDefault();
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'cards') {
+                renderCards();
+            } else if (tabName === 'receipts') {
+                renderReceipts();
+            }
+        }
+
+        async function updateStats(cards, receipts) {
+            const totalBalance = cards.reduce((sum, card) => sum + parseFloat(card.balance), 0);
+            const activeCards = cards.filter(c => new Date(c.expiry_date) >= new Date()).length;
+            const totalSpent = receipts.reduce((sum, r) => sum + parseFloat(r.amount), 0);
+
+            document.getElementById('totalBalance').textContent = `$${totalBalance.toFixed(2)}`;
+            document.getElementById('activeCards').textContent = activeCards;
+            document.getElementById('totalSpent').textContent = `$${totalSpent.toFixed(2)}`;
+        }
+
+        async function updateUI() {
+            const cards = await getCards();
+            const receipts = await getReceipts();
+            updateStats(cards, receipts);
+            renderCards();
+        }
+    </script>
+</body>
+</html>
