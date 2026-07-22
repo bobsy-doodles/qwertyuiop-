@@ -766,6 +766,10 @@
     <div class="modal" id="editModal">
         <div class="modal-content">
             <h2>Edit Receipt Details</h2>
+            <div class="ocr-status" id="ocrStatus" style="display: none;">
+                <span class="ocr-loading">⏳</span> Analyzing receipt...
+            </div>
+            <div class="detected-values" id="detectedValues" style="display: none;"></div>
             <form onsubmit="handleSaveReceipt(event)">
                 <div class="modal-form-group">
                     <label for="editAmount">Amount Spent ($)</label>
@@ -866,7 +870,7 @@
             errorDiv.classList.remove('show');
         }
 
-        async function handleAuth(event) {
+        function handleAuth(event) {
             event.preventDefault();
             hideError();
 
@@ -942,7 +946,7 @@
         // ========================
         // CARD FUNCTIONS
         // ========================
-        async function handleAddCard(event) {
+        function handleAddCard(event) {
             event.preventDefault();
 
             const card = {
@@ -1135,6 +1139,254 @@
                     </div>
                 `;
             }).join('');
+
+            container.innerHTML = html;
+        }
+
+        // ========================
+        // OCR RECEIPT ANALYSIS
+        // ========================
+        async function analyzeReceiptOCR(imageData) {
+            const ocrStatus = document.getElementById('ocrStatus');
+            const detectedValues = document.getElementById('detectedValues');
+            
+            ocrStatus.style.display = 'block';
+            detectedValues.style.display = 'none';
+            detectedCardNumber = null;
+
+            try {
+                const result = await Tesseract.recognize(
+                    imageData,
+                    'eng',
+                    { logger: m => console.log(m) }
+                );
+
+                const text = result.data.text.toUpperCase();
+                console.log('OCR Text:', text);
+
+                // Extract amounts (look for dollar signs and numbers)
+                const amountPattern = /\$\s*(\d+\.?\d{0,2})|(\d+\.?\d{0,2})\s*(?:USD|TOTAL|SUBTOTAL)/g;
+                const amounts = [];
+                let match;
+                while ((match = amountPattern.exec(text)) !== null) {
+                    const amount = parseFloat(match[1] || match[2]);
+                    if (amount > 0 && amount < 10000) {
+                        amounts.push(amount);
+                    }
+                }
+
+                // Extract card numbers (look for sequences of 4+ digits)
+                const cardPattern = /(?:\b|^)(\d{4}[\s\-]?\d{4}[\s\-]?\d{4}[\s\-]?\d{4}|\d{4}[\s\-]?\d{2}[\s\-]?\d{4}|\d{6,})\b/g;
+                const cardNumbers = [];
+                while ((match = cardPattern.exec(text)) !== null) {
+                    const card = match[1].replace(/\s|-/g, '');
+                    if (card.length >= 6) {
+                        cardNumbers.push(card);
+                    }
+                }
+
+                // Match card numbers with stored cards
+                const cards = getCards();
+                let matchedCard = null;
+                let matchedCardIndex = -1;
+
+                for (let i = 0; i < cards.length; i++) {
+                    const storedCard = cards[i].number.replace(/\s|-/g, '');
+                    for (const detectedCard of cardNumbers) {
+                        // Check if last 4 digits match or if full number matches
+                        if (storedCard.slice(-4) === detectedCard.slice(-4) || storedCard.includes(detectedCard) || detectedCard.includes(storedCard)) {
+                            matchedCard = cards[i];
+                            matchedCardIndex = i;
+                            detectedCardNumber = cards[i].number;
+                            break;
+                        }
+                    }
+                    if (matchedCard) break;
+                }
+
+                // Show detected values
+                let detectedHTML = '<strong>🔍 Detected Values:</strong>';
+                
+                if (matchedCard) {
+                    detectedHTML += `<div class="detection-item matched"><strong>✓ Card Found: ${matchedCard.name}</strong><br>Card ending in: ...${matchedCard.number.slice(-4)}</div>`;
+                }
+
+                if (amounts.length > 0) {
+                    const mainAmount = amounts[amounts.length - 1];
+                    detectedHTML += `<div class="detection-item"><strong>💰 Amount:</strong> $${mainAmount.toFixed(2)}</div>`;
+                }
+
+                if (cardNumbers.length > 0) {
+                    detectedHTML += `<div class="detection-item clickable" onclick="useDetectedCardNumber('${cardNumbers[0]}')"><strong>🔢 Card Number Detected:</strong><br>${cardNumbers[0]}<br><em style="font-size: 11px;">(Click to use this card number)</em></div>`;
+                    detectedCardNumber = cardNumbers[0];
+                }
+
+                if (amounts.length === 0 && cardNumbers.length === 0) {
+                    detectedHTML += '<div class="detection-item">No amounts or card numbers detected. Please enter them manually.</div>';
+                }
+
+                detectedValues.innerHTML = detectedHTML;
+                detectedValues.style.display = 'block';
+
+                // Pre-fill the form if we detected values
+                if (amounts.length > 0) {
+                    document.getElementById('editAmount').value = amounts[amounts.length - 1].toFixed(2);
+                }
+
+                // Pre-fill card number if detected
+                if (detectedCardNumber) {
+                    document.getElementById('editCardNumber').value = detectedCardNumber;
+                }
+
+                // Pre-select the matched card
+                if (matchedCard) {
+                    document.getElementById('editCard').value = matchedCard.id;
+                }
+
+                ocrStatus.style.display = 'none';
+                return { amounts, cardNumbers, matchedCard };
+            } catch (error) {
+                console.error('OCR Error:', error);
+                ocrStatus.innerHTML = '<span style="color: #d32f2f;">Failed to analyze receipt. Please enter details manually.</span>';
+                return { amounts: [], cardNumbers: [], matchedCard: null };
+            }
+        }
+
+        function useDetectedCardNumber(cardNum) {
+            document.getElementById('editCardNumber').value = cardNum;
+            detectedCardNumber = cardNum;
+        }
+
+        // ========================
+        // RECEIPT MANAGEMENT
+        // ========================
+        function handleReceiptUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate file size (5MB max)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('File size must be less than 5MB');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                editingReceiptId = null;
+                detectedCardNumber = null;
+                currentReceiptImage = e.target.result;
+                showEditModal(null, e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showEditModal(receiptId, imageData) {
+            editingReceiptId = receiptId;
+            const modal = document.getElementById('editModal');
+
+            // Populate card dropdown
+            const cards = getCards();
+            const selectCard = document.getElementById('editCard');
+            selectCard.innerHTML = cards.map(card => 
+                `<option value="${card.id}">${card.name} (...${card.number.slice(-4)})</option>`
+            ).join('');
+
+            if (receiptId) {
+                const receipts = getReceipts();
+                const receipt = receipts.find(r => r.id === receiptId);
+                if (receipt) {
+                    document.getElementById('editAmount').value = receipt.amount;
+                    document.getElementById('editCard').value = receipt.cardId;
+                    document.getElementById('editCardNumber').value = receipt.cardNumber || '';
+                    document.getElementById('editNotes').value = receipt.notes || '';
+                }
+                document.getElementById('ocrStatus').style.display = 'none';
+                document.getElementById('detectedValues').style.display = 'none';
+            } else {
+                document.getElementById('editAmount').value = '';
+                document.getElementById('editCardNumber').value = '';
+                document.getElementById('editNotes').value = '';
+                if (cards.length > 0) {
+                    document.getElementById('editCard').value = cards[0].id;
+                }
+                // Analyze the receipt with OCR
+                if (imageData && imageData.startsWith('data:')) {
+                    analyzeReceiptOCR(imageData);
+                }
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+            editingReceiptId = null;
+            currentReceiptImage = null;
+            detectedCardNumber = null;
+            document.getElementById('ocrStatus').style.display = 'none';
+            document.getElementById('detectedValues').style.display = 'none';
+        }
+
+        function handleSaveReceipt(event) {
+            event.preventDefault();
+            const amount = parseFloat(document.getElementById('editAmount').value);
+            const cardId = parseInt(document.getElementById('editCard').value);
+            const cardNumber = document.getElementById('editCardNumber').value;
+            const notes = document.getElementById('editNotes').value;
+
+            const cards = getCards();
+            const card = cards.find(c => c.id === cardId);
+
+            if (!card) {
+                alert('Please select a valid card');
+                return;
+            }
+
+            if (editingReceiptId) {
+                // Update existing receipt
+                const receipts = getReceipts();
+                const receipt = receipts.find(r => r.id === editingReceiptId);
+                if (receipt) {
+                    // Refund old amount
+                    const cardIndex = cards.findIndex(c => c.id === receipt.cardId);
+                    if (cardIndex !== -1) {
+                        cards[cardIndex].spent -= receipt.amount;
+                    }
+                }
+                receipt.amount = amount;
+                receipt.cardId = cardId;
+                receipt.cardNumber = cardNumber;
+                receipt.notes = notes;
+                receipt.updatedAt = new Date().toISOString();
+                saveReceipts(receipts);
+            } else {
+                // Create new receipt
+                const receipt = {
+                    id: Date.now(),
+                    amount: amount,
+                    cardId: cardId,
+                    cardNumber: cardNumber,
+                    image: currentReceiptImage,
+                    notes: notes,
+                    createdAt: new Date().toISOString()
+                };
+
+                const receipts = getReceipts();
+                receipts.push(receipt);
+                saveReceipts(receipts);
+            }
+
+            // Deduct from card
+            const cardIndex = cards.findIndex(c => c.id === cardId);
+            if (cardIndex !== -1) {
+                cards[cardIndex].spent += amount;
+            }
+            saveCards(cards);
+
+            closeModal();
+            renderReceipts();
+            renderCards();
+            updateUI();
         }
 
         function renderReceipts() {
@@ -1185,6 +1437,68 @@
             document.getElementById('activeCards').textContent = activeCards;
             document.getElementById('totalSpent').textContent = '$' + totalSpent.toFixed(2);
         }
+
+            // Sort by date (newest first)
+            receipts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            const html = receipts.map(receipt => {
+                const card = cards.find(c => c.id === receipt.cardId);
+                const cardName = card ? card.name : 'Unknown Card';
+
+                return `
+                    <div class="receipt-item">
+                        <img src="${receipt.image}" alt="Receipt" class="receipt-image">
+                        <div class="receipt-info">
+                            <div class="receipt-amount">-$${receipt.amount.toFixed(2)}</div>
+                            <div class="receipt-date">${new Date(receipt.createdAt).toLocaleDateString()}</div>
+                            <div class="receipt-card">Card: ${cardName}</div>
+                            ${receipt.cardNumber ? `<div class="receipt-card">Card #: ${receipt.cardNumber}</div>` : ''}
+                            ${receipt.notes ? `<div class="receipt-card">Note: ${receipt.notes}</div>` : ''}
+                            <div class="receipt-actions">
+                                <button class="btn btn-secondary" onclick="editReceipt(${receipt.id})">Edit</button>
+                                <button class="btn btn-danger" onclick="deleteReceipt(${receipt.id})">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+        }
+
+        function editReceipt(receiptId) {
+            const receipts = getReceipts();
+            const receipt = receipts.find(r => r.id === receiptId);
+            if (receipt) {
+                showEditModal(receiptId, receipt.image);
+            }
+        }
+
+        // ========================
+        // UI UPDATES
+        // ========================
+        function updateUI() {
+            const cards = getCards();
+            
+            // Calculate totals
+            let totalBalance = 0;
+            let totalSpent = 0;
+            let activeCount = 0;
+
+            cards.forEach(card => {
+                const balance = card.amount - card.spent;
+                const isExpired = new Date(card.expiry) < new Date();
+                
+                totalBalance += balance;
+                totalSpent += card.spent;
+                if (!isExpired) activeCount++;
+            });
+
+            document.getElementById('totalBalance').textContent = '$' + totalBalance.toFixed(2);
+            document.getElementById('activeCards').textContent = activeCount;
+            document.getElementById('totalSpent').textContent = '$' + totalSpent.toFixed(2);
+        }
+        
         // ========================
         // DRAG AND DROP
         // ========================
