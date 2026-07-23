@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gift Card Manager</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='7' width='28' height='18' rx='3' fill='%23C9A227'/%3E%3Crect x='2' y='12' width='28' height='4' fill='%231A1815' opacity='.25'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="desk">
+
+  <!-- ===================== AUTH VIEW ===================== -->
+  <main id="authView" class="auth-wrap">
+    <div class="auth-card">
+      <h1 class="wordmark"><span class="wordmark__mark" aria-hidden="true">◆</span> Gift Card Manager</h1>
+      <p class="auth-subtitle" id="authSubtitle">Sign in to your wallet</p>
+
+      <div id="authMessage" class="banner" hidden role="status"></div>
+
+      <form id="authForm" novalidate>
+        <div class="field" id="fieldEmail">
+          <label for="authEmail">Email</label>
+          <input type="email" id="authEmail" autocomplete="email" required>
+        </div>
+        <div class="field" id="fieldPassword">
+          <label for="authPassword">Password</label>
+          <input type="password" id="authPassword" autocomplete="current-password" minlength="6">
+        </div>
+        <div class="field" id="fieldPasswordConfirm" hidden>
+          <label for="authPasswordConfirm">Confirm password</label>
+          <input type="password" id="authPasswordConfirm" autocomplete="new-password" minlength="6">
+        </div>
+
+        <div class="error-message" id="authError" role="alert" hidden></div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="authSubmitBtn">Sign in</button>
+      </form>
+
+      <div class="auth-links">
+        <button type="button" class="link-btn" id="authForgotBtn">Forgot password?</button>
+        <button type="button" class="link-btn" id="authToggleBtn">Need an account? Create one</button>
+        <button type="button" class="link-btn" id="authBackBtn" hidden>Back to sign in</button>
+        <button type="button" class="link-btn" id="authResendBtn" hidden>Resend confirmation email</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===================== MAIN APP ===================== -->
+  <div id="appView" class="app-shell" hidden>
+    <header class="app-header">
+      <h1 class="wordmark wordmark--light"><span class="wordmark__mark" aria-hidden="true">◆</span> Gift Card Manager</h1>
+      <div class="user-chip">
+        <span id="userEmail"></span>
+        <button type="button" class="btn btn-ghost" id="signOutBtn">Sign out</button>
+      </div>
+    </header>
+
+    <div class="paper">
+
+      <div class="ticker">
+        <div class="ticker__item">
+          <span class="ticker__label">Balance</span>
+          <span class="ticker__value" id="statBalance">$0.00</span>
+        </div>
+        <div class="ticker__item">
+          <span class="ticker__label">Active cards</span>
+          <span class="ticker__value" id="statActive">0</span>
+        </div>
+        <div class="ticker__item">
+          <span class="ticker__label">Spent</span>
+          <span class="ticker__value ticker__value--debit" id="statSpent">$0.00</span>
+        </div>
+      </div>
+
+      <nav class="tabs" role="tablist">
+        <button class="tab active" id="tabWalletBtn" role="tab" aria-selected="true" aria-controls="walletPanel">Wallet</button>
+        <button class="tab" id="tabReceiptsBtn" role="tab" aria-selected="false" aria-controls="receiptsPanel">Receipts</button>
+      </nav>
+
+      <!-- ---- WALLET PANEL ---- -->
+      <section id="walletPanel" class="tab-panel" role="tabpanel">
+        <div class="wallet-grid" id="cardsGrid">
+          <button type="button" class="add-tile" id="addCardBtn" aria-label="Add a gift card">
+            <span class="add-tile__plus" aria-hidden="true">+</span>
+            <span>Add a card</span>
+          </button>
+        </div>
+        <p class="empty-state" id="cardsEmpty" hidden>No cards yet. Add your first gift card to start tracking its balance.</p>
+      </section>
+
+      <!-- ---- RECEIPTS PANEL ---- -->
+      <section id="receiptsPanel" class="tab-panel" hidden role="tabpanel">
+        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload a receipt photo">
+          <p class="dropzone__title">Drop a receipt photo here</p>
+          <p class="dropzone__hint">or tap to choose a file · JPG/PNG, up to 5MB</p>
+          <input type="file" id="fileInput" accept="image/*" hidden>
+        </div>
+        <p class="hint-inline" id="noCardsHint" hidden>Add a gift card first — receipts need a card to log against.</p>
+
+        <div class="receipts-grid" id="receiptsGrid"></div>
+        <p class="empty-state" id="receiptsEmpty" hidden>No receipts yet. Upload one above to start a running record.</p>
+      </section>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ===================== CARD DIALOG ===================== -->
+<dialog id="cardDialog" class="dialog">
+  <form id="cardForm" novalidate>
+    <h2 id="cardDialogTitle">Add a card</h2>
+
+    <div class="field">
+      <label for="cardName">Card name</label>
+      <input type="text" id="cardName" placeholder="e.g. Target, Starbucks" required>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="cardNumber">Card number</label>
+        <input type="text" id="cardNumber" class="mono-input" inputmode="numeric" placeholder="•••• •••• •••• ••••">
+      </div>
+      <div class="field">
+        <label for="cardPin">PIN</label>
+        <input type="text" id="cardPin" class="mono-input" inputmode="numeric" placeholder="Optional">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="cardAmount">Starting balance</label>
+        <input type="number" id="cardAmount" class="mono-input" step="0.01" min="0" placeholder="0.00" required>
+      </div>
+      <div class="field">
+        <label for="cardExpiry">Expiry</label>
+        <input type="date" id="cardExpiry" class="mono-input">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="cardNotes">Notes</label>
+      <textarea id="cardNotes" rows="2" placeholder="Optional"></textarea>
+    </div>
+
+    <div class="error-message" id="cardError" role="alert" hidden></div>
+
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-danger" id="cardDeleteBtn" hidden>Delete</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn btn-secondary" id="cardCancelBtn">Cancel</button>
+      <button type="submit" class="btn btn-primary" id="cardSaveBtn">Save card</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ===================== RECEIPT DIALOG ===================== -->
+<dialog id="receiptDialog" class="dialog">
+  <form id="receiptForm" novalidate>
+    <h2 id="receiptDialogTitle">New receipt</h2>
+
+    <img id="receiptPreview" class="receipt-preview" alt="Receipt photo preview" hidden>
+
+    <p class="ocr-status" id="ocrStatus" hidden>Scanning receipt…</p>
+
+    <div class="field">
+      <label for="receiptCard">Card</label>
+      <select id="receiptCard" required></select>
+    </div>
+
+    <div class="field">
+      <label for="receiptAmount">Amount spent</label>
+      <input type="number" id="receiptAmount" class="mono-input" step="0.01" min="0" placeholder="0.00" required>
+    </div>
+
+    <div class="field">
+      <label for="receiptNotes">Notes</label>
+      <textarea id="receiptNotes" rows="2" placeholder="What did you buy?"></textarea>
+    </div>
+
+    <div class="error-message" id="receiptError" role="alert" hidden></div>
+
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-danger" id="receiptDeleteBtn" hidden>Delete</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn btn-secondary" id="receiptCancelBtn">Cancel</button>
+      <button type="submit" class="btn btn-primary" id="receiptSaveBtn">Save receipt</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+<script src="config.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
