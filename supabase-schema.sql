@@ -5,9 +5,20 @@
 -- ============================================================
 
 -- ------------------------------------------------------------
+-- 0. Clean slate — drops anything left over from a previous
+--    partial run so this script is always safe to re-run.
+-- ------------------------------------------------------------
+drop table if exists public.receipts cascade;
+drop table if exists public.cards cascade;
+
+drop policy if exists "Users read their own receipt images" on storage.objects;
+drop policy if exists "Users upload their own receipt images" on storage.objects;
+drop policy if exists "Users delete their own receipt images" on storage.objects;
+
+-- ------------------------------------------------------------
 -- 1. Cards — one row per physical/digital gift card
 -- ------------------------------------------------------------
-create table if not exists public.cards (
+create table public.cards (
   id             uuid primary key default gen_random_uuid(),
   user_id        uuid not null references auth.users(id) on delete cascade,
   name           text not null,
@@ -27,7 +38,7 @@ create index if not exists cards_user_id_idx on public.cards(user_id);
 --    summing receipts for a card, so it can never drift out of
 --    sync the way a manually-incremented counter can.
 -- ------------------------------------------------------------
-create table if not exists public.receipts (
+create table public.receipts (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references auth.users(id) on delete cascade,
   card_id     uuid not null references public.cards(id) on delete cascade,
