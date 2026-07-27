@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cybersecurity Portfolio - Operator Terminal</title>
+    <style>
+        body {
+            background-color: #0d0d0d;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            padding: 20px;
+            margin: 0;
+        }
+        .terminal {
+            background-color: #1a1a1a;
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+            border-radius: 5px;
+            max-width: 800px;
+            margin: 40px auto;
+            overflow: hidden;
+        }
+        .terminal-header {
+            background-color: #333;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #00ff00;
+        }
+        .buttons {
+            display: flex;
+            gap: 5px;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .red { background-color: #ff5f56; }
+        .yellow { background-color: #ffbd2e; }
+        .green { background-color: #27c93f; }
+        .title {
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .terminal-body {
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .input-line {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+        }
+        .prompt {
+            color: #00ff00;
+            margin-right: 10px;
+        }
+        .blink {
+            animation: blinker 1s linear infinite;
+            background-color: #00ff00;
+            width: 8px;
+            height: 15px;
+            display: inline-block;
+        }
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+        ul {
+            list-style-type: "[+] ";
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="terminal">
+    <div class="terminal-header">
+        <div class="buttons">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+        </div>
+        <div class="title">sec-ops@portfolio:~</div>
+        <div></div>
+    </div>
+    <div class="terminal-body">
+        <p>[!] LOADING SECURE INTERFACE...</p>
+        <p>[+] COGNITIVE LINK EXTABLISHED WITH USER.</p>
+        <hr style="border-color: #00ff00;">
+        
+        <h2>SYSTEM OBJECTIVES</h2>
+        <p>Welcome to the defensive security hub. This portal tracks training modules, local infrastructure testing, and structural code reviews.</p>
+        
+        <h2>SKILLS ACCREDITATION</h2>
+        <ul>
+            <li><strong>Network Defense:</strong> Hardening server ports, configuring firewall access rules, and identifying structural network weak points.</li>
+            <li><strong>Code Analysis:</strong> Scanning Python and JavaScript source builds for memory vulnerabilities and injection risks.</li>
+            <li><strong>Log Auditing:</strong> Sifting through system access requests to spot suspicious repeated failure events.</li>
+        </ul>
+
+        <h2>ACTIVE PROJECTS</h2>
+        <ul>
+            <li><strong>Project Arcology:</strong> An open-source network simulation tool to model traffic routing under heavy loads.</li>
+            <li><strong>LogScanner Beta:</strong> A lightweight shell script designed to flag outdated cryptography libraries.</li>
+        </ul>
+
+        <div class="input-line">
+            <span class="prompt">guest@sec-ops:~$</span>
+            <span>awaiting user input... </span>
+            <span class="blink"></span>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
